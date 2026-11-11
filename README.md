@@ -6,7 +6,7 @@ There is no backend: decoding, editing and WebP encoding all run in the tab (lib
 ## Features
 
 - **Sources:** pick a file, drag & drop, paste (⌘/Ctrl+V), or paste an `x.com` / `twitter.com` post link. Twitter GIFs are really MP4s, so the app reads the post's GIF, video or photo via public CORS-enabled embed APIs (fxtwitter, with vxtwitter as fallback).
-- **Hold & release to send:** press and hold the big button. It arms after ~0.5 s and you release to open the share sheet (WhatsApp). The finished sticker preview can also be long-pressed on iPhone → *Copy* → paste into a WhatsApp chat.
+- **Send to WhatsApp:** on iPhone, drag the finished sticker into WhatsApp. On Android, tap **Share** and pick WhatsApp.
 - **Borders:** die-cut *Sticker* edge (follows transparency), Rounded, Circle, Square or None, with any width and color.
 - **Captions:** emoji-friendly text, top/bottom, three font styles, text and outline colors, auto-wrap and auto-shrink.
 - **Trim & smoothness** for clips (WhatsApp allows ≤ 10 s).
@@ -16,7 +16,8 @@ There is no backend: decoding, editing and WebP encoding all run in the tab (lib
 
 | Device | How |
 | --- | --- |
-| iPhone / Android | Hold → release → pick WhatsApp in the share sheet. Or long-press the preview → Copy → paste in a chat. |
+| iPhone | Hold the finished sticker, switch to WhatsApp with another finger (or swipe home → WhatsApp), drop it in a chat and tap *Make sticker*. |
+| Android | Tap **Share** → WhatsApp → pick a chat. Or **Save** and attach the `.webp` from WhatsApp's file picker. |
 | WhatsApp Web / Desktop | Click **Save**, then drag the `.webp` into a chat (it's sent as a sticker). |
 
 ## Run locally
@@ -56,7 +57,7 @@ Then set `CORS_PROXY` in `js/config.js` to `'https://gif2sticker-proxy.<you>.wor
 
 ```
 index.html, css/style.css     UI (mobile-first)
-js/app.js                     wiring: inputs, state, hold-to-send
+js/app.js                     wiring: inputs, state, share/save
 js/sources.js                 GIF / video / image → frames
 js/twitter.js, js/net.js      post link → media URL → Blob
 js/renderer.js                512×512 frame: fit, borders, caption
@@ -64,7 +65,6 @@ js/preview.js                 live animated preview
 js/encoder.js                 renders frames, talks to the worker
 js/encoder.worker.js          libwebp (WASM) encoding + fit-to-size loop
 js/webp-meta.js               WhatsApp EXIF metadata chunk
-js/hold.js                    press-and-hold gesture
 vendor/                       wasm-webp (libwebp) and gifuct-js, see vendor/LICENSES.md
 proxy/worker.js               optional Cloudflare Worker CORS proxy
 ```

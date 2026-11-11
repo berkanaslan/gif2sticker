@@ -5,7 +5,6 @@ import { fetchBlob } from './net.js';
 import { encodeSticker } from './encoder.js';
 import { withStickerMetadata } from './webp-meta.js';
 import { PreviewPlayer } from './preview.js';
-import { bindHold } from './hold.js';
 
 const $ = (selector) => document.querySelector(selector);
 const ui = {
@@ -22,8 +21,7 @@ const ui = {
   preview: $('#preview'),
   result: $('#result'),
   status: $('#status'),
-  send: $('#send'),
-  sendLabel: $('#send .label'),
+  share: $('#share'),
   save: $('#save'),
   toast: $('#toast'),
 };
@@ -108,17 +106,12 @@ function stickerMetadata(style) {
 
 // ---------- sticker lifecycle ----------
 
-function setSendLabel(text) {
-  ui.sendLabel.textContent = text;
-}
-
 function renderStatus() {
   const { sticker, job } = state;
   const ready = sticker?.version === state.version;
   ui.result.hidden = !ready;
   ui.preview.hidden = ready;
-  ui.save.disabled = !ready;
-  ui.send.disabled = !state.frames.length;
+  ui.save.disabled = ui.share.disabled = !ready;
 
   if (ready) {
     const { kb, frames, fits } = sticker.info;
@@ -126,15 +119,12 @@ function renderStatus() {
       ? `${kb} KB · ${frames} frame${frames > 1 ? 's' : ''} · ready for WhatsApp ✓`
       : `${kb} KB is over WhatsApp's limit — shorten it or choose “Light”.`;
     ui.status.classList.toggle('warn', !fits);
-    setSendLabel(ui.send.classList.contains('armed') ? 'Release to send' : 'Hold, then release to send');
   } else if (job?.version === state.version) {
     ui.status.classList.remove('warn');
     ui.status.textContent = `Making sticker… ${Math.round(job.progress * 100)}%`;
-    setSendLabel(ui.send.classList.contains('armed') ? 'Preparing… keep holding' : 'Preparing…');
   } else {
     ui.status.classList.remove('warn');
     ui.status.textContent = 'Live preview';
-    setSendLabel('Hold, then release to send');
   }
 }
 
@@ -186,16 +176,13 @@ function download(file) {
   setTimeout(() => URL.revokeObjectURL(a.href), 10_000);
 }
 
-// Must run synchronously inside a user gesture (iOS Safari requirement for navigator.share).
+// Opens the system share sheet (Android → WhatsApp). Must run directly in the click handler.
 function share(file) {
-  const data = { files: [file] };
-  if (navigator.canShare?.(data)) {
-    navigator.share(data).catch((err) => err.name !== 'AbortError' && download(file));
-  } else {
-    download(file);
-    toast('Saved. Send the .webp file to WhatsApp to use it as a sticker.');
-  }
+  navigator.share({ files: [file] }).catch((err) => err.name !== 'AbortError' && download(file));
 }
+
+const canShareFiles = () =>
+  navigator.canShare?.({ files: [new File([''], 'probe.webp', { type: 'image/webp' })] }) ?? false;
 
 // ---------- loading ----------
 
@@ -343,26 +330,16 @@ function setupEditor() {
   });
 }
 
-function setupSend() {
-  bindHold(ui.send, {
-    onStart: () => ensureSticker(),
-    onArmed: renderStatus,
-    onRelease: (armed) => {
-      const ready = state.sticker?.version === state.version;
-      renderStatus();
-      if (!armed) return toast('Hold the button, then release to send.');
-      if (!ready) return toast('Almost ready — hold & release again in a moment.');
-      share(state.sticker.file);
-    },
-    onCancel: renderStatus,
-  });
+function setupExport() {
+  ui.share.hidden = !canShareFiles();
+  ui.share.addEventListener('click', () => state.sticker && share(state.sticker.file));
   ui.save.addEventListener('click', () => state.sticker && download(state.sticker.file));
 }
 
 setupSwatches();
 setupInputs();
 setupEditor();
-setupSend();
+setupExport();
 
 const sharedUrl = new URLSearchParams(location.search).get('url') ?? new URLSearchParams(location.search).get('text');
 if (sharedUrl) loadLink(sharedUrl);
