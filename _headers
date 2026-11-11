@@ -1,8 +1,16 @@
-# Cloudflare Pages / Netlify response headers. Ignored by other static hosts.
+# Cloudflare Pages response headers (`! Name` removes a header set by a broader rule).
+# Vendor files have no hash in their names, so keep their cache short enough to pick up updates.
 /vendor/*
-  Cache-Control: public, max-age=31536000, immutable
+  Cache-Control: public, max-age=604800
 /*.wasm
   Content-Type: application/wasm
 /*
   X-Content-Type-Options: nosniff
   Referrer-Policy: no-referrer
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self'; connect-src 'self' https:; img-src 'self' blob: data:; media-src 'self' blob:; style-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'
+# The encoder worker follows its own policy: libwebp's Emscripten bindings build functions at
+# runtime ('unsafe-eval'). It only receives pixel data from the page and has no network access.
+/js/encoder.worker.js
+  ! Content-Security-Policy
+  Content-Security-Policy: default-src 'none'; script-src 'self' 'unsafe-eval' 'wasm-unsafe-eval'; connect-src 'self'
