@@ -4,6 +4,9 @@
   Cache-Control: public, max-age=604800
 /*.wasm
   Content-Type: application/wasm
+# Show the licence notices in the browser instead of downloading a .md file.
+/vendor/LICENSES.md
+  Content-Type: text/plain; charset=utf-8
 /*
   X-Content-Type-Options: nosniff
   Referrer-Policy: no-referrer
