@@ -40,9 +40,17 @@ Netlify works the same way. GitHub Pages also works, but it needs a paid plan fo
 
 Each visitor downloads about 250 KB gzipped once, and then it's cached for a year. All processing happens on the visitor's device, so hosting cost doesn't grow with usage.
 
-### Optional: CORS proxy
+### CORS proxy (needed for X/Twitter links)
 
-If a browser ever can't fetch Twitter media directly, deploy `proxy/worker.js` to Cloudflare Workers (free tier). Then set `CORS_PROXY` in `js/config.js`. It only proxies Twitter API and media hosts. Leave it empty to stay fully serverless.
+The app fetches post media directly first, sending no referrer. Twitter's video CDN (`video.twimg.com`) may still answer requests coming from another website with **403**. The same link works when you open it in a tab, because then it's not a cross-site request. A browser can't hide the fact that a request is cross-site, so the fix is a tiny proxy on Cloudflare Workers' free plan (100k requests/day). It only forwards Twitter API and media hosts.
+
+```sh
+cd proxy
+npx wrangler login     # free Cloudflare account
+npx wrangler deploy    # prints https://gif2sticker-proxy.<you>.workers.dev
+```
+
+Then set `CORS_PROXY` in `js/config.js` to `'https://gif2sticker-proxy.<you>.workers.dev/?url='`. The app tries the direct request first and uses the proxy only when that fails. Files, pastes and other links never touch it.
 
 ## Project layout
 
