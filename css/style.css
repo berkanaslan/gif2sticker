@@ -157,6 +157,10 @@ details summary { cursor: pointer; font-weight: 700; }
 .actions button { flex: 1; min-height: 52px; font-size: 17px; }
 .actions .ghost { background: var(--card); }
 
+.credit { max-width: 560px; margin: 24px auto 0; padding: 0 16px; text-align: center; color: var(--muted); font-size: 13px; }
+.credit p { margin: 4px 0; }
+.credit a { color: inherit; font-weight: 600; }
+
 .toast {
   position: fixed; left: 50%; bottom: calc(92px + env(safe-area-inset-bottom)); transform: translateX(-50%);
   max-width: calc(100% - 32px); padding: 10px 16px; border-radius: 12px;

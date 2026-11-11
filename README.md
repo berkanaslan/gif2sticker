@@ -60,7 +60,7 @@ Then set `CORS_PROXY` in `js/config.js` to `'https://gif2sticker-proxy.<you>.wor
 
 ```
 index.html, css/style.css     UI (mobile-first)
-js/app.js                     wiring: inputs, state, share/save
+js/app.js                     wiring: inputs, state, copy/save
 js/sources.js                 GIF / video / image → frames
 js/twitter.js, js/net.js      post link → media URL → Blob
 js/renderer.js                512×512 frame: fit, borders, caption
