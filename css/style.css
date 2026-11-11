@@ -162,6 +162,7 @@ details summary { cursor: pointer; font-weight: 700; }
 .credit a { color: inherit; font-weight: 600; }
 .credit-links { display: flex; align-items: center; justify-content: center; gap: 10px; }
 .credit-links svg { display: block; }
+.credit .github { display: inline-flex; align-items: center; gap: 6px; }
 
 .toast {
   position: fixed; left: 50%; bottom: calc(92px + env(safe-area-inset-bottom)); transform: translateX(-50%);
