@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>GIF to Sticker</title>
+  <meta name="description" content="Turn any GIF, video or X (Twitter) post into a WhatsApp sticker, right in your browser.">
+  <meta name="theme-color" content="#0b141a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon-180.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="modulepreload" href="vendor/webp-wasm.js">
+  <link rel="stylesheet" href="css/style.css">
+  <script type="module" src="js/app.js"></script>
+</head>
+<body>
+  <header class="top">
+    <h1><img src="icon.svg" alt="" width="28" height="28"> GIF → Sticker</h1>
+    <button type="button" id="restart" class="ghost" hidden>New</button>
+  </header>
+
+  <main>
+    <section id="source" class="card">
+      <label class="drop" id="drop">
+        <input type="file" id="file" accept="image/gif,image/*,video/*" hidden>
+        <strong>Choose a GIF, video or image</strong>
+        <span>or drop / paste it here</span>
+      </label>
+      <form id="link" class="link">
+        <input type="url" name="url" placeholder="x.com post or GIF link" autocomplete="off" inputmode="url" required>
+        <button type="button" id="paste" class="ghost">Paste</button>
+        <button type="submit">Load</button>
+      </form>
+    </section>
+
+    <section id="editor" hidden>
+      <div class="stage">
+        <canvas id="preview" width="512" height="512" aria-label="Sticker preview"></canvas>
+        <img id="result" alt="Finished sticker – long-press to copy or save" hidden>
+      </div>
+      <p id="status" class="status" aria-live="polite"></p>
+
+      <form id="style" class="card controls">
+        <fieldset>
+          <legend>Border</legend>
+          <div class="seg">
+            <label><input type="radio" name="shape" value="outline" checked><span>Sticker</span></label>
+            <label><input type="radio" name="shape" value="rounded"><span>Rounded</span></label>
+            <label><input type="radio" name="shape" value="circle"><span>Circle</span></label>
+            <label><input type="radio" name="shape" value="square"><span>Square</span></label>
+            <label><input type="radio" name="shape" value="none"><span>None</span></label>
+          </div>
+          <label class="row"><span>Width</span>
+            <input type="range" name="borderWidth" min="0" max="24" value="10">
+          </label>
+          <div class="row"><span>Color</span>
+            <div class="swatches"><input type="color" name="borderColor" value="#ffffff" aria-label="Border color"></div>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Fit</legend>
+          <div class="seg">
+            <label><input type="radio" name="fit" value="contain" checked><span>Whole</span></label>
+            <label><input type="radio" name="fit" value="cover"><span>Fill square</span></label>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Caption</legend>
+          <textarea name="captionText" rows="1" maxlength="80" placeholder="Add text… 😎" enterkeyhint="done"></textarea>
+          <div class="seg">
+            <label><input type="radio" name="captionPos" value="bottom" checked><span>Bottom</span></label>
+            <label><input type="radio" name="captionPos" value="top"><span>Top</span></label>
+          </div>
+          <div class="seg">
+            <label><input type="radio" name="captionFont" value="bold" checked><span class="f-bold">Bold</span></label>
+            <label><input type="radio" name="captionFont" value="rounded"><span class="f-rounded">Rounded</span></label>
+            <label><input type="radio" name="captionFont" value="hand"><span class="f-hand">Hand</span></label>
+          </div>
+          <label class="row"><span>Size</span>
+            <input type="range" name="captionSize" min="24" max="96" value="56">
+          </label>
+          <div class="row"><span>Color</span>
+            <div class="swatches"><input type="color" name="captionColor" value="#ffffff" aria-label="Text color"></div>
+          </div>
+          <div class="row"><span>Outline</span>
+            <div class="swatches"><input type="color" name="captionStroke" value="#000000" aria-label="Text outline color"></div>
+          </div>
+        </fieldset>
+
+        <details>
+          <summary>WhatsApp details</summary>
+          <label class="field">Emoji tags <small>(up to 3, helps WhatsApp suggest it)</small>
+            <input type="text" name="emojis" placeholder="😂🔥" maxlength="24">
+          </label>
+          <label class="field">Pack name <input type="text" name="packName" placeholder="My stickers" maxlength="64"></label>
+          <label class="field">Author <input type="text" name="publisher" placeholder="Me" maxlength="64"></label>
+        </details>
+      </form>
+
+      <form id="timing" class="card controls" hidden>
+        <fieldset>
+          <legend>Timing <small id="timing-info"></small></legend>
+          <label class="field">Start <output name="startOut"></output>
+            <input type="range" name="start" min="0" max="0" step="0.1" value="0">
+          </label>
+          <label class="field">Length <output name="clipOut"></output>
+            <input type="range" name="clip" min="0.5" max="10" step="0.1" value="10">
+          </label>
+          <div class="seg">
+            <label><input type="radio" name="fps" value="8"><span>Light</span></label>
+            <label><input type="radio" name="fps" value="12" checked><span>Smooth</span></label>
+            <label><input type="radio" name="fps" value="20"><span>Smoothest</span></label>
+          </div>
+        </fieldset>
+      </form>
+    </section>
+  </main>
+
+  <footer class="actions" id="actions" hidden>
+    <button type="button" id="send" class="hold" disabled>
+      <span class="fill" aria-hidden="true"></span>
+      <span class="label">Hold, then release to send</span>
+    </button>
+    <button type="button" id="save" class="ghost" disabled>Save</button>
+  </footer>
+
+  <div id="toast" class="toast" role="status" hidden></div>
+</body>
+</html>
