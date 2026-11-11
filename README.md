@@ -35,12 +35,12 @@ python3 -m http.server 8080   # then open http://localhost:8080
 
 ## Hosting (≈ $0)
 
-Any static host works. **Cloudflare Pages** is the recommended free option: it supports private GitHub repos, has unlimited bandwidth on the free plan, and applies the caching rules in `_headers`.
+Any static host works. It's deployed on **Cloudflare Workers** (static assets, Free plan): private GitHub repos are supported, static requests are free and unlimited, and `_headers` caching rules apply. `wrangler.jsonc` serves the repo root and `.assetsignore` keeps non-site files (README, `proxy/`) out of the deployment.
 
-1. Cloudflare dashboard → Workers & Pages → Create → Pages → Connect to Git → pick this repo.
-2. Build command: *(none)* · Output directory: `/`.
+1. Cloudflare dashboard → Workers & Pages → Create → Import a repository → pick this repo.
+2. Build command: *(none)* · Deploy command: `npx wrangler deploy`.
 
-Netlify works the same way. GitHub Pages also works, but it needs a paid plan for a **private** repo.
+Netlify works too. GitHub Pages also works, but it needs a paid plan for a **private** repo.
 
 Each visitor downloads about 250 KB gzipped once, and then it's cached for a year. All processing happens on the visitor's device, so hosting cost doesn't grow with usage.
 
