@@ -42,7 +42,11 @@
         <img id="result" alt="Finished sticker" hidden>
       </div>
       <p id="status" class="status" aria-live="polite"></p>
-      <p class="hint">iPhone: hold the sticker, switch to WhatsApp and drop it in a chat.<br>Android: tap <b>Share</b> and pick WhatsApp.</p>
+      <ol class="hint">
+        <li>Hold the sticker → <b>Copy</b></li>
+        <li>In a WhatsApp chat, hold the message box → <b>Paste</b></li>
+        <li>Send it as a <b>Custom sticker</b>, then tap it → Add to Favorites</li>
+      </ol>
 
       <form id="style" class="card controls">
         <fieldset>
@@ -123,8 +127,8 @@
   </main>
 
   <footer class="actions" id="actions" hidden>
-    <button type="button" id="share" disabled>Share</button>
-    <button type="button" id="save" class="ghost" disabled>Save</button>
+    <button type="button" id="save-gif" disabled>Save GIF</button>
+    <button type="button" id="save-webp" class="ghost" disabled title="WhatsApp's native sticker file, for WhatsApp Web / Desktop">Save WebP</button>
   </footer>
 
   <div id="toast" class="toast" role="status" hidden></div>

@@ -1,24 +1,27 @@
 # GIF → Sticker
 
 Turn a GIF, video, image, or **X/Twitter post** into a WhatsApp sticker, entirely in the browser.
-There is no backend: decoding, editing and WebP encoding all run in the tab (libwebp compiled to WebAssembly, in a Web Worker).
+There is no backend: decoding, editing and encoding all run in the tab, in a Web Worker.
 
 ## Features
 
 - **Sources:** pick a file, drag & drop, paste (⌘/Ctrl+V), or paste an `x.com` / `twitter.com` post link. Twitter GIFs are really MP4s, so the app reads the post's GIF, video or photo via public CORS-enabled embed APIs (fxtwitter, with vxtwitter as fallback).
-- **Send to WhatsApp:** on iPhone, drag the finished sticker into WhatsApp. On Android, tap **Share** and pick WhatsApp.
+- **Copy & paste into WhatsApp, animated:** the result is a transparent animated GIF. WhatsApp mobile turns a *pasted GIF* into an animated **Custom sticker**. A pasted or dragged WebP gets flattened to a still sticker, which is why the GIF is the main output.
 - **Borders:** die-cut *Sticker* edge (follows transparency), Rounded, Circle, Square or None, with any width and color.
 - **Captions:** emoji-friendly text, top/bottom, three font styles, text and outline colors, auto-wrap and auto-shrink.
 - **Trim & smoothness** for clips (WhatsApp allows ≤ 10 s).
-- **WhatsApp-ready output:** 512×512 animated WebP, automatically shrunk under WhatsApp's **500 KB** limit (100 KB for still images) by lowering quality and then frame rate. It also embeds WhatsApp sticker metadata (pack name, author and up to 3 emoji tags).
+- **Fits WhatsApp's limits automatically:** output is kept under **500 KB**.
+  - The GIF uses one shared palette and stores only the pixels that changed between frames. If that's still too big, it shrinks from 512 px towards 320 px, and drops frames only as a last resort.
+  - **Save WebP** gives WhatsApp's native 512×512 animated WebP (libwebp compiled to WebAssembly). It embeds sticker metadata: pack name, author and up to 3 emoji tags.
 
 ## Getting it into WhatsApp
 
 | Device | How |
 | --- | --- |
-| iPhone | Hold the finished sticker, switch to WhatsApp with another finger (or swipe home → WhatsApp), drop it in a chat and tap *Make sticker*. |
-| Android | Tap **Share** → WhatsApp → pick a chat. Or **Save** and attach the `.webp` from WhatsApp's file picker. |
-| WhatsApp Web / Desktop | Click **Save**, then drag the `.webp` into a chat (it's sent as a sticker). |
+| iPhone / Android | Hold the finished sticker → **Copy**. In a WhatsApp chat, hold the message box → **Paste**, then send it as a **Custom sticker**. Tap it → *Add to Favorites* to keep it. If the browser won't copy, tap **Save GIF** and paste or share it from your gallery. |
+| WhatsApp Web / Desktop | **Save WebP**, then try dragging it into a chat. This route hasn't been verified. |
+
+If WhatsApp doesn't offer *Custom sticker*, the GIF is probably too large: shorten the clip or choose **Light**.
 
 ## Run locally
 
@@ -63,8 +66,8 @@ js/twitter.js, js/net.js      post link → media URL → Blob
 js/renderer.js                512×512 frame: fit, borders, caption
 js/preview.js                 live animated preview
 js/encoder.js                 renders frames, talks to the worker
-js/encoder.worker.js          libwebp (WASM) encoding + fit-to-size loop
+js/encoder.worker.js          GIF (gifenc) / WebP (libwebp WASM) encoding + fit-to-size loop
 js/webp-meta.js               WhatsApp EXIF metadata chunk
-vendor/                       wasm-webp (libwebp) and gifuct-js, see vendor/LICENSES.md
+vendor/                       wasm-webp (libwebp), gifuct-js, gifenc; see vendor/LICENSES.md
 proxy/worker.js               optional Cloudflare Worker CORS proxy
 ```

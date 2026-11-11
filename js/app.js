@@ -21,8 +21,8 @@ const ui = {
   preview: $('#preview'),
   result: $('#result'),
   status: $('#status'),
-  share: $('#share'),
-  save: $('#save'),
+  saveGif: $('#save-gif'),
+  saveWebp: $('#save-webp'),
   toast: $('#toast'),
 };
 
@@ -31,14 +31,21 @@ const STYLE_STORAGE_KEY = 'gif2sticker.style';
 const NUMERIC_FIELDS = ['borderWidth', 'captionSize', 'start', 'clip', 'fps'];
 const ENCODE_IDLE_MS = 900;
 const MIN_TRIMMABLE_S = 1;
+const DEFAULT_CLIP_S = 4; // short loops stay under WhatsApp's size limit with good quality
 
 const player = new PreviewPlayer(ui.preview);
 const state = {
   source: null,
   frames: [],
   version: 0, // bumps on every edit; results from older versions are discarded
-  job: null, // { version, promise, progress }
-  sticker: null, // { version, file, url, info }
+  outputs: {}, // format → { version, file, url, info }
+  jobs: {}, // format → { version, promise, progress }
+};
+
+// GIF is what gets copied & pasted into WhatsApp mobile; WebP is WhatsApp's native sticker file.
+const FORMATS = {
+  gif: { type: 'image/gif', finish: (bytes) => bytes },
+  webp: { type: 'image/webp', finish: (bytes, style) => withStickerMetadata(bytes, stickerMetadata(style), STICKER_SIZE) },
 };
 
 // ---------- small helpers ----------
@@ -106,62 +113,69 @@ function stickerMetadata(style) {
 
 // ---------- sticker lifecycle ----------
 
-function renderStatus() {
-  const { sticker, job } = state;
-  const ready = sticker?.version === state.version;
-  ui.result.hidden = !ready;
-  ui.preview.hidden = ready;
-  ui.save.disabled = ui.share.disabled = !ready;
+const current = (format) => (state.outputs[format]?.version === state.version ? state.outputs[format] : null);
+const running = (format) => (state.jobs[format]?.version === state.version ? state.jobs[format] : null);
 
-  if (ready) {
-    const { kb, frames, fits } = sticker.info;
+function renderStatus() {
+  const gif = current('gif');
+  const job = running('gif') ?? running('webp');
+  ui.result.hidden = !gif;
+  ui.preview.hidden = !!gif;
+  ui.saveGif.disabled = !gif;
+  ui.saveWebp.disabled = !state.frames.length;
+  ui.status.classList.toggle('warn', !!gif && !gif.info.fits);
+
+  if (job) {
+    const label = job === running('webp') ? 'Making WebP' : 'Making sticker';
+    ui.status.textContent = `${label}… ${Math.round(job.progress * 100)}%`;
+  } else if (gif) {
+    const { kb, frames, fits } = gif.info;
     ui.status.textContent = fits
-      ? `${kb} KB · ${frames} frame${frames > 1 ? 's' : ''} · ready for WhatsApp ✓`
-      : `${kb} KB is over WhatsApp's limit — shorten it or choose “Light”.`;
-    ui.status.classList.toggle('warn', !fits);
-  } else if (job?.version === state.version) {
-    ui.status.classList.remove('warn');
-    ui.status.textContent = `Making sticker… ${Math.round(job.progress * 100)}%`;
+      ? `${kb} KB · ${frames} frame${frames > 1 ? 's' : ''} · ready ✓`
+      : `${kb} KB is large — WhatsApp may not offer it as a sticker. Shorten it or choose “Light”.`;
   } else {
-    ui.status.classList.remove('warn');
     ui.status.textContent = 'Live preview';
   }
 }
 
-function ensureSticker() {
+/** Encodes the current frames + style as `format`, reusing the result until something changes. */
+function ensureOutput(format) {
   const version = state.version;
-  if (state.sticker?.version === version) return Promise.resolve(state.sticker);
-  if (state.job?.version === version) return state.job.promise;
+  if (current(format)) return Promise.resolve(current(format));
+  if (running(format)) return running(format).promise;
 
   const style = readForm(ui.style);
   const job = { version, progress: 0 };
-  job.promise = encodeSticker(state.frames, style, (progress) => {
+  job.promise = encodeSticker(state.frames, style, format, (progress) => {
     job.progress = progress;
     renderStatus();
   })
     .then(({ bytes, frames, fits }) => {
       if (version !== state.version) return null;
-      const webp = withStickerMetadata(bytes, stickerMetadata(style), STICKER_SIZE);
-      const file = new File([webp], `sticker-${Date.now()}.webp`, { type: 'image/webp' });
-      if (state.sticker) URL.revokeObjectURL(state.sticker.url);
-      state.sticker = { version, file, url: URL.createObjectURL(file), info: { kb: Math.ceil(webp.length / 1024), frames, fits } };
-      ui.result.src = state.sticker.url;
-      return state.sticker;
+      const { type, finish } = FORMATS[format];
+      const data = finish(bytes, style);
+      const file = new File([data], `sticker-${Date.now()}.${format}`, { type });
+      if (state.outputs[format]) URL.revokeObjectURL(state.outputs[format].url);
+      const output = { version, file, url: URL.createObjectURL(file), info: { kb: Math.ceil(data.length / 1024), frames, fits } };
+      state.outputs[format] = output;
+      // The fragment makes Chrome on iOS copy the original (animated) bytes instead of a still frame.
+      if (format === 'gif') ui.result.src = `${output.url}#sticker.gif`;
+      return output;
     })
     .catch((err) => {
       toast(err.message);
       return null;
     })
     .finally(() => {
-      if (state.job === job) state.job = null;
+      if (state.jobs[format] === job) delete state.jobs[format];
       renderStatus();
     });
-  state.job = job;
+  state.jobs[format] = job;
   renderStatus();
   return job.promise;
 }
 
-const scheduleSticker = debounce(() => state.frames.length && ensureSticker(), ENCODE_IDLE_MS);
+const scheduleSticker = debounce(() => state.frames.length && ensureOutput('gif'), ENCODE_IDLE_MS);
 
 function changed() {
   state.version++;
@@ -176,13 +190,6 @@ function download(file) {
   setTimeout(() => URL.revokeObjectURL(a.href), 10_000);
 }
 
-// Opens the system share sheet (Android → WhatsApp). Must run directly in the click handler.
-function share(file) {
-  navigator.share({ files: [file] }).catch((err) => err.name !== 'AbortError' && download(file));
-}
-
-const canShareFiles = () =>
-  navigator.canShare?.({ files: [new File([''], 'probe.webp', { type: 'image/webp' })] }) ?? false;
 
 // ---------- loading ----------
 
@@ -200,7 +207,7 @@ function setupTiming(duration) {
   start.max = Math.max(0, duration - 0.5).toFixed(1);
   start.value = 0;
   clip.max = Math.min(MAX_DURATION_S, duration).toFixed(1);
-  clip.value = clip.max;
+  clip.value = Math.min(DEFAULT_CLIP_S, duration).toFixed(1);
   ui.timingInfo.textContent = `(clip is ${formatSeconds(duration)}, max ${MAX_DURATION_S}s)`;
   syncTimingOutputs();
 }
@@ -331,9 +338,11 @@ function setupEditor() {
 }
 
 function setupExport() {
-  ui.share.hidden = !canShareFiles();
-  ui.share.addEventListener('click', () => state.sticker && share(state.sticker.file));
-  ui.save.addEventListener('click', () => state.sticker && download(state.sticker.file));
+  ui.saveGif.addEventListener('click', () => current('gif') && download(current('gif').file));
+  ui.saveWebp.addEventListener('click', async () => {
+    const webp = await ensureOutput('webp');
+    if (webp) download(webp.file);
+  });
 }
 
 setupSwatches();
