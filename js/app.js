@@ -21,7 +21,6 @@ const ui = {
   preview: $('#preview'),
   result: $('#result'),
   stage: $('#stage'),
-  collapse: $('#collapse'),
   busy: $('#busy'),
   busyLabel: $('#busy-label'),
   busyBar: $('#busy-bar'),
@@ -37,7 +36,10 @@ const NUMERIC_FIELDS = ['borderWidth', 'captionSize', 'start', 'clip', 'fps'];
 const ENCODE_IDLE_MS = 900;
 const MIN_TRIMMABLE_S = 1;
 const DEFAULT_CLIP_S = 4; // short loops stay under WhatsApp's size limit with good quality
-const NEAR_TOP_PX = 24;
+// Preview collapses past COLLAPSE_AT and expands above EXPAND_AT (the gap prevents flicker).
+const COLLAPSE_AT_PX = 120;
+const EXPAND_AT_PX = 40;
+const MINI_PREVIEW_PX = 104;
 
 const player = new PreviewPlayer(ui.preview);
 const state = {
@@ -350,30 +352,26 @@ function setupEditor() {
   });
 }
 
-function setCollapsed(collapsed) {
-  ui.stage.classList.toggle('collapsed', collapsed);
-  ui.collapse.setAttribute('aria-expanded', String(!collapsed));
-  ui.collapse.setAttribute('aria-label', collapsed ? 'Expand preview' : 'Collapse preview');
-}
-
-/** Collapse button for the sticky preview; it expands again when you scroll back to the top. */
+/** The sticky preview shrinks to a corner thumbnail while scrolled down, and grows back at the top. */
 function setupStage() {
-  let leftTop = false;
-  ui.collapse.addEventListener('click', () => {
-    setCollapsed(!ui.stage.classList.contains('collapsed'));
-    leftTop = window.scrollY > NEAR_TOP_PX;
-  });
-  window.addEventListener(
-    'scroll',
-    () => {
-      if (window.scrollY > NEAR_TOP_PX) leftTop = true;
-      else if (leftTop && ui.stage.classList.contains('collapsed')) {
-        leftTop = false;
-        setCollapsed(false);
-      }
-    },
-    { passive: true },
-  );
+  const isCollapsed = () => ui.stage.classList.contains('collapsed');
+  const sizeMini = () => {
+    // offsetWidth / clientWidth ignore transforms, so this is safe to measure while collapsed.
+    const width = ui.stage.offsetWidth;
+    ui.stage.style.setProperty('--mini-scale', String(MINI_PREVIEW_PX / width));
+    ui.stage.style.setProperty('--mini-shift', `${(ui.editor.clientWidth - width) / 2}px`);
+  };
+  const update = () => {
+    if (!isCollapsed() && window.scrollY > COLLAPSE_AT_PX) {
+      sizeMini();
+      ui.stage.classList.add('collapsed');
+    } else if (isCollapsed() && window.scrollY < EXPAND_AT_PX) {
+      ui.stage.classList.remove('collapsed');
+    }
+  };
+  window.addEventListener('scroll', update, { passive: true });
+  window.addEventListener('resize', sizeMini);
+  ui.stage.addEventListener('click', () => isCollapsed() && window.scrollTo({ top: 0, behavior: 'smooth' }));
 }
 
 function setupExport() {
