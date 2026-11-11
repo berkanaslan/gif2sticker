@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>GIF to Sticker</title>
   <meta name="description" content="Turn any GIF, video or X (Twitter) post into a WhatsApp sticker, right in your browser.">
+  <meta name="referrer" content="no-referrer">
   <meta name="theme-color" content="#0b141a">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -36,11 +37,20 @@
     </section>
 
     <section id="editor" hidden>
-      <div class="stage">
+      <div class="stage" id="stage">
         <canvas id="preview" width="512" height="512" aria-label="Sticker preview"></canvas>
-        <img id="result" alt="Finished sticker – long-press to copy or save" hidden>
+        <img id="result" alt="Finished sticker" hidden>
+        <div class="busy" id="busy" hidden>
+          <span class="busy-label" id="busy-label">Making sticker…</span>
+          <span class="busy-track"><span class="busy-bar" id="busy-bar"></span></span>
+        </div>
       </div>
       <p id="status" class="status" aria-live="polite"></p>
+      <ol class="hint">
+        <li>Hold the sticker → <b>Copy</b></li>
+        <li>In a WhatsApp chat, hold the message box → <b>Paste</b></li>
+        <li>Send it as a <b>Custom sticker</b>, then tap it → Add to Favorites</li>
+      </ol>
 
       <form id="style" class="card controls">
         <fieldset>
@@ -111,9 +121,9 @@
             <input type="range" name="clip" min="0.5" max="10" step="0.1" value="10">
           </label>
           <div class="seg">
-            <label><input type="radio" name="fps" value="8"><span>Light</span></label>
-            <label><input type="radio" name="fps" value="12" checked><span>Smooth</span></label>
-            <label><input type="radio" name="fps" value="20"><span>Smoothest</span></label>
+            <label><input type="radio" name="fps" value="10"><span>Light</span></label>
+            <label><input type="radio" name="fps" value="20" checked><span>Smooth</span></label>
+            <label><input type="radio" name="fps" value="25"><span>Smoothest</span></label>
           </div>
         </fieldset>
       </form>
@@ -121,11 +131,8 @@
   </main>
 
   <footer class="actions" id="actions" hidden>
-    <button type="button" id="send" class="hold" disabled>
-      <span class="fill" aria-hidden="true"></span>
-      <span class="label">Hold, then release to send</span>
-    </button>
-    <button type="button" id="save" class="ghost" disabled>Save</button>
+    <button type="button" id="save-gif" disabled>Save GIF</button>
+    <button type="button" id="save-webp" class="ghost" disabled title="WhatsApp's native sticker file, for WhatsApp Web / Desktop">Save WebP</button>
   </footer>
 
   <div id="toast" class="toast" role="status" hidden></div>

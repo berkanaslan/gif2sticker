@@ -67,6 +67,7 @@ function drawShaped(ctx, image, rect, { shape, borderWidth, borderColor }) {
 /** Die-cut "sticker edge": dilate the subject's alpha and fill it with the border color. */
 function drawOutlined(ctx, image, rect, { borderWidth, borderColor }) {
   const sctx = subject.getContext('2d');
+  sctx.imageSmoothingQuality = 'high';
   sctx.clearRect(0, 0, SIZE, SIZE);
   drawImage(sctx, image, rect);
 
@@ -136,6 +137,7 @@ function drawCaption(ctx, { captionText, captionPos, captionSize, captionFont, c
 
 /** Draws one sticker frame (512×512, transparent) onto `ctx`. */
 export function renderSticker(ctx, image, style) {
+  ctx.imageSmoothingQuality = 'high';
   ctx.clearRect(0, 0, SIZE, SIZE);
   const rect = layout(image, style);
   if (style.shape === 'outline') drawOutlined(ctx, image, rect, style);

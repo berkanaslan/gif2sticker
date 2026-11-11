@@ -11,7 +11,7 @@ function getWorker() {
   worker.onmessage = ({ data }) => {
     const job = jobs.get(data.id);
     if (!job) return;
-    if ('progress' in data) return job.onProgress?.(data.progress);
+    if ('progress' in data) return job.onProgress?.(data);
     jobs.delete(data.id);
     if (data.error) job.reject(new Error(data.error));
     else job.resolve(data.result);
@@ -29,15 +29,22 @@ function renderFrames(frames, style) {
   });
 }
 
-/** Resolves to { bytes: Uint8Array, quality, frames, fits }. */
-export function encodeSticker(frames, style, onProgress) {
+// WhatsApp's own limits for WebP stickers; a pasted GIF bigger than this isn't offered as a sticker.
+const limitFor = (format, frameCount) =>
+  format === 'webp' && frameCount === 1 ? STATIC_LIMIT_BYTES : ANIMATED_LIMIT_BYTES;
+
+/**
+ * Encodes frames as 'gif' or 'webp'. Resolves to { bytes: Uint8Array, frames, fits }.
+ * `onProgress({ progress, attempt })`: progress (0–1) of the current attempt; attempt > 0 means shrinking.
+ */
+export function encodeSticker(frames, style, format, onProgress) {
   const rendered = renderFrames(frames, style);
-  const limit = rendered.length > 1 ? ANIMATED_LIMIT_BYTES : STATIC_LIMIT_BYTES;
+  const limit = limitFor(format, rendered.length);
   const id = nextId++;
   return new Promise((resolve, reject) => {
     jobs.set(id, { resolve, reject, onProgress });
     getWorker().postMessage(
-      { id, size: STICKER_SIZE, frames: rendered, limit },
+      { id, format, size: STICKER_SIZE, frames: rendered, limit },
       rendered.map((f) => f.data.buffer),
     );
   });

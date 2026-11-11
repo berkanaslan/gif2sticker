@@ -15,7 +15,9 @@ function scaledSize(width, height) {
 function snapshot(drawable, width, height) {
   const canvas = document.createElement('canvas');
   Object.assign(canvas, scaledSize(width, height));
-  canvas.getContext('2d').drawImage(drawable, 0, 0, canvas.width, canvas.height);
+  const ctx = canvas.getContext('2d');
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(drawable, 0, 0, canvas.width, canvas.height);
   return createImageBitmap(canvas);
 }
 
