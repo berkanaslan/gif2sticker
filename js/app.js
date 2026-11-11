@@ -20,6 +20,11 @@ const ui = {
   timingInfo: $('#timing-info'),
   preview: $('#preview'),
   result: $('#result'),
+  stage: $('#stage'),
+  collapse: $('#collapse'),
+  busy: $('#busy'),
+  busyLabel: $('#busy-label'),
+  busyBar: $('#busy-bar'),
   status: $('#status'),
   saveGif: $('#save-gif'),
   saveWebp: $('#save-webp'),
@@ -32,6 +37,7 @@ const NUMERIC_FIELDS = ['borderWidth', 'captionSize', 'start', 'clip', 'fps'];
 const ENCODE_IDLE_MS = 900;
 const MIN_TRIMMABLE_S = 1;
 const DEFAULT_CLIP_S = 4; // short loops stay under WhatsApp's size limit with good quality
+const NEAR_TOP_PX = 24;
 
 const player = new PreviewPlayer(ui.preview);
 const state = {
@@ -125,9 +131,16 @@ function renderStatus() {
   ui.saveWebp.disabled = !state.frames.length;
   ui.status.classList.toggle('warn', !!gif && !gif.info.fits);
 
+  // Progress shows on the (sticky) preview and on the always-visible Save button.
+  const percent = job?.progress ? ` ${Math.round(job.progress * 100)}%` : '';
+  ui.busy.hidden = !job;
+  ui.busyBar.style.width = job ? `${Math.max(8, job.progress * 100)}%` : '0';
+  ui.saveGif.textContent = job && !gif ? `Making…${percent}` : 'Save GIF';
+
   if (job) {
-    const label = job === running('webp') ? 'Making WebP' : 'Making sticker';
-    ui.status.textContent = `${label}… ${Math.round(job.progress * 100)}%`;
+    const label = job.attempt > 0 ? 'Shrinking to fit' : job === running('webp') ? 'Making WebP' : 'Making sticker';
+    ui.busyLabel.textContent = `${label}…${percent}`;
+    ui.status.textContent = `${label}…`;
   } else if (gif) {
     const { kb, frames, fits } = gif.info;
     ui.status.textContent = fits
@@ -145,9 +158,9 @@ function ensureOutput(format) {
   if (running(format)) return running(format).promise;
 
   const style = readForm(ui.style);
-  const job = { version, progress: 0 };
-  job.promise = encodeSticker(state.frames, style, format, (progress) => {
-    job.progress = progress;
+  const job = { version, progress: 0, attempt: 0 };
+  job.promise = encodeSticker(state.frames, style, format, ({ progress, attempt }) => {
+    Object.assign(job, { progress, attempt });
     renderStatus();
   })
     .then(({ bytes, frames, fits }) => {
@@ -234,7 +247,7 @@ function showEditor(visible) {
 }
 
 async function load(blobPromise, label = 'Loading…') {
-  ui.source.classList.add('busy');
+  ui.source.classList.add('loading');
   toast(label);
   try {
     const source = await createSource(await blobPromise);
@@ -248,7 +261,7 @@ async function load(blobPromise, label = 'Loading…') {
     console.error(err);
     toast(err.message || 'Could not open that file.');
   } finally {
-    ui.source.classList.remove('busy');
+    ui.source.classList.remove('loading');
   }
 }
 
@@ -337,6 +350,32 @@ function setupEditor() {
   });
 }
 
+function setCollapsed(collapsed) {
+  ui.stage.classList.toggle('collapsed', collapsed);
+  ui.collapse.setAttribute('aria-expanded', String(!collapsed));
+  ui.collapse.setAttribute('aria-label', collapsed ? 'Expand preview' : 'Collapse preview');
+}
+
+/** Collapse button for the sticky preview; it expands again when you scroll back to the top. */
+function setupStage() {
+  let leftTop = false;
+  ui.collapse.addEventListener('click', () => {
+    setCollapsed(!ui.stage.classList.contains('collapsed'));
+    leftTop = window.scrollY > NEAR_TOP_PX;
+  });
+  window.addEventListener(
+    'scroll',
+    () => {
+      if (window.scrollY > NEAR_TOP_PX) leftTop = true;
+      else if (leftTop && ui.stage.classList.contains('collapsed')) {
+        leftTop = false;
+        setCollapsed(false);
+      }
+    },
+    { passive: true },
+  );
+}
+
 function setupExport() {
   ui.saveGif.addEventListener('click', () => current('gif') && download(current('gif').file));
   ui.saveWebp.addEventListener('click', async () => {
@@ -348,6 +387,7 @@ function setupExport() {
 setupSwatches();
 setupInputs();
 setupEditor();
+setupStage();
 setupExport();
 
 const sharedUrl = new URLSearchParams(location.search).get('url') ?? new URLSearchParams(location.search).get('text');

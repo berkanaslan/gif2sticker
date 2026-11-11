@@ -64,7 +64,7 @@ button.ghost { background: transparent; color: var(--text); border: 1px solid va
   cursor: pointer; padding: 16px;
 }
 .drop span { color: var(--muted); }
-.busy .drop { opacity: .5; pointer-events: none; }
+.loading .drop { opacity: .5; pointer-events: none; }
 .link { display: flex; gap: 8px; margin-top: 12px; }
 .link input {
   flex: 1; min-width: 0; padding: 10px 12px;
@@ -79,7 +79,28 @@ button.ghost { background: transparent; color: var(--text); border: 1px solid va
   box-shadow: 0 2px 12px rgb(0 0 0 / 12%);
   background: repeating-conic-gradient(var(--check) 0 25%, transparent 0 50%) 0 0 / 24px 24px var(--card);
 }
+.stage { transition: width .2s ease, margin .2s ease; }
 .stage canvas, .stage img { display: block; width: 100%; height: 100%; }
+/* Collapsed: a small preview tucked in the corner; it re-expands at the top of the page. */
+.stage.collapsed { width: 104px; margin-right: 0; }
+.stage.collapsed .busy-label { display: none; }
+.collapse {
+  position: absolute; top: 6px; right: 6px; width: 30px; height: 30px; padding: 0;
+  display: grid; place-items: center; border-radius: 50%;
+  background: rgb(17 27 33 / 55%); color: #fff; backdrop-filter: blur(6px);
+}
+.collapse svg { transition: transform .2s; }
+.stage.collapsed .collapse { width: 24px; height: 24px; top: 4px; right: 4px; }
+.stage.collapsed .collapse svg { transform: rotate(180deg); }
+
+.busy {
+  position: absolute; left: 8px; right: 8px; bottom: 8px; display: grid; gap: 6px;
+  padding: 8px 10px; border-radius: 12px; background: rgb(17 27 33 / 70%); color: #fff;
+  font-size: 13px; font-weight: 600; backdrop-filter: blur(6px);
+}
+.stage.collapsed .busy { left: 4px; right: 4px; bottom: 4px; padding: 4px; }
+.busy-track { height: 4px; border-radius: 2px; background: rgb(255 255 255 / 25%); overflow: hidden; }
+.busy-bar { display: block; height: 100%; width: 0; background: var(--accent); transition: width .2s; }
 /* Long-press the finished sticker on iPhone to Copy / Save / Share it. */
 .stage img { -webkit-touch-callout: default; }
 .status { text-align: center; color: var(--muted); font-size: 14px; margin: 8px 0 0; min-height: 1.4em; }
