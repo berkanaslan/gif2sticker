@@ -274,7 +274,9 @@ const LINK_HELP = 'Drag the GIF onto this page instead, or save it and choose th
 
 /** X/Twitter posts are resolved to their media; any other link is a file or a page with a GIF/video. */
 async function blobFromLink(text) {
-  const url = text.match(/https?:\/\/\S+/)?.[0] ?? text.trim();
+  // Anything that isn't a web link stays on the device: no request is made for it.
+  const url = text.match(/https?:\/\/\S+/)?.[0];
+  if (!url) throw new LinkError('Paste a link that starts with https://');
   const tweetId = parseTweetId(url);
   if (tweetId) return fetchBlob(await resolveTweetMedia(tweetId));
   return fetchBlob(url).catch((err) => {

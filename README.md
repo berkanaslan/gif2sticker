@@ -55,7 +55,7 @@ Each visitor downloads about 240 KB gzipped, and the encoder files are then cach
 
 A browser can't read another website's pages, and some media hosts (Twitter's `video.twimg.com`, many image hosts) refuse requests that come from another website. So the site's Worker (`worker/`) does it, on the same domain:
 
-1. The app tries every link directly from the browser first. Only when that's blocked, or the link is a web page, does it ask `/api/media?url=…`.
+1. Text that isn't an `http(s)://` link never leaves the device. A link is tried directly from the browser first. Only when the browser is blocked (CORS), the site refuses hotlinking (401/403), or the link is a web page does the app ask `/api/media?url=…`. Any other error (404, 500…) is shown without asking the server.
 2. A GIF / image / video link is streamed through as-is.
 3. A web page is read up to `</head>` for the preview its owner publishes for link previews (`og:video`, `og:image`, `twitter:image`…). A video wins over a GIF, and a GIF over a still image.
 
