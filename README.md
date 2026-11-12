@@ -28,21 +28,21 @@ If WhatsApp doesn't offer *Custom sticker*, the GIF is probably too large: short
 It's plain static files with no build step and no dependencies:
 
 ```sh
-python3 -m http.server 8080   # then open http://localhost:8080
+python3 -m http.server 8080 -d public   # then open http://localhost:8080
 ```
 
 (Opening `index.html` from disk won't work because module workers need http(s).)
 
 ## Hosting (≈ $0)
 
-Any static host works. It's deployed on **Cloudflare Workers** (static assets, Free plan): private GitHub repos are supported, static requests are free and unlimited, and `_headers` caching rules apply. `wrangler.jsonc` serves the repo root and `.assetsignore` keeps non-site files (README, `proxy/`) out of the deployment.
+Any static host works. It's deployed on **Cloudflare Workers** (static assets, Free plan): private GitHub repos are supported, static requests are free and unlimited, and `_headers` caching rules apply. `wrangler.jsonc` deploys only the `public/` folder, so repo files such as the README, `.gitignore` or `proxy/` are never served. Put anything the site needs in `public/`, and nothing else.
 
 1. Cloudflare dashboard → Workers & Pages → Create → Import a repository → pick this repo.
 2. Build command: *(none)* · Deploy command: `npx wrangler deploy`.
 
 Netlify works too. GitHub Pages also works, but it needs a paid plan for a **private** repo.
 
-Each visitor downloads about 250 KB gzipped once, and then it's cached for a year. All processing happens on the visitor's device, so hosting cost doesn't grow with usage.
+Each visitor downloads about 240 KB gzipped, and the encoder files are then cached for a week. All processing happens on the visitor's device, so hosting cost doesn't grow with usage.
 
 ### CORS proxy (needed for X/Twitter links)
 
@@ -54,9 +54,11 @@ npx wrangler login     # free Cloudflare account
 npx wrangler deploy    # prints https://gif2sticker-proxy.<you>.workers.dev
 ```
 
-Then set `CORS_PROXY` in `js/config.js` to `'https://gif2sticker-proxy.<you>.workers.dev/?url='`. The app tries the direct request first and uses the proxy only when that fails. Files, pastes and other links never touch it.
+Then set `CORS_PROXY` in `public/js/config.js` to `'https://gif2sticker-proxy.<you>.workers.dev/?url='`. The app tries the direct request first and uses the proxy only when that fails. Files, pastes and other links never touch it.
 
 ## Project layout
+
+Everything the site serves lives in `public/`:
 
 ```
 index.html, css/style.css     UI (mobile-first)
