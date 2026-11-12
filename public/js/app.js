@@ -1,6 +1,8 @@
 import { MAX_DURATION_S, STICKER_SIZE } from './config.js';
 import { createSource } from './sources.js';
 import { parseTweetId, resolveTweetMedia } from './twitter.js';
+import { tenorMediaUrl } from './tenor.js';
+import { readTransfer } from './transfer.js';
 import { fetchBlob } from './net.js';
 import { encodeSticker } from './encoder.js';
 import { withStickerMetadata } from './webp-meta.js';
@@ -269,13 +271,32 @@ async function load(blobPromise, label = 'Loading…') {
   }
 }
 
+/** Turns a shared page link (X/Twitter post, Tenor GIF) into the URL of its media file. */
+async function mediaUrl(url) {
+  const tweetId = parseTweetId(url);
+  return tweetId ? resolveTweetMedia(tweetId) : tenorMediaUrl(url) ?? url;
+}
+
 async function blobFromLink(text) {
   const url = text.match(/https?:\/\/\S+/)?.[0] ?? text.trim();
-  const tweetId = parseTweetId(url);
-  return fetchBlob(tweetId ? await resolveTweetMedia(tweetId) : url);
+  return fetchBlob(await mediaUrl(url));
 }
 
 const loadLink = (text) => load(blobFromLink(text), parseTweetId(text) ? 'Fetching the post’s GIF…' : 'Downloading…');
+
+/** Loads a drop or paste, fetching the animated original when the browser only handed over a still. */
+async function loadTransfer(data) {
+  const { file, url } = readTransfer(data);
+  if (!url) return file && load(Promise.resolve(file));
+  if (!file) return loadLink(url);
+  let gotStill = false;
+  const original = fetchBlob(url).catch(() => {
+    gotStill = true;
+    return file;
+  });
+  await load(original, 'Fetching the animated GIF…');
+  if (gotStill) toast('That site only let us take a still image. Save the GIF to your device and choose it instead.');
+}
 
 // ---------- wiring ----------
 
@@ -314,20 +335,16 @@ function setupInputs() {
   });
 
   document.addEventListener('paste', (e) => {
-    if (e.target.closest?.('#style')) return;
-    const file = [...(e.clipboardData?.files ?? [])][0];
-    const text = e.clipboardData?.getData('text');
-    if (file) load(Promise.resolve(file));
-    else if (text && /https?:\/\//.test(text) && e.target !== ui.link.elements.url) loadLink(text);
+    if (e.target.closest?.('#style') || !e.clipboardData) return;
+    // Typing or pasting into the link box is handled by its own form.
+    if (e.target === ui.link.elements.url && !e.clipboardData.files.length) return;
+    loadTransfer(e.clipboardData);
   });
 
   document.addEventListener('dragover', (e) => e.preventDefault());
   document.addEventListener('drop', (e) => {
     e.preventDefault();
-    const file = e.dataTransfer?.files?.[0];
-    const text = e.dataTransfer?.getData('text/uri-list') || e.dataTransfer?.getData('text');
-    if (file) load(Promise.resolve(file));
-    else if (text) loadLink(text);
+    if (e.dataTransfer) loadTransfer(e.dataTransfer);
   });
 
   ui.restart.addEventListener('click', () => {
