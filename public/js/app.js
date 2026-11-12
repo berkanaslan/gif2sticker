@@ -272,11 +272,11 @@ async function load(blobPromise, label = 'Loading…') {
 
 const LINK_HELP = 'Drag the GIF onto this page instead, or save it and choose the file.';
 
-/** X/Twitter posts are resolved to their media (via the proxy if needed); other links must point at a file. */
+/** X/Twitter posts are resolved to their media; any other link is a file or a page with a GIF/video. */
 async function blobFromLink(text) {
   const url = text.match(/https?:\/\/\S+/)?.[0] ?? text.trim();
   const tweetId = parseTweetId(url);
-  if (tweetId) return fetchBlob(await resolveTweetMedia(tweetId), { proxy: true });
+  if (tweetId) return fetchBlob(await resolveTweetMedia(tweetId));
   return fetchBlob(url).catch((err) => {
     throw err instanceof LinkError ? new LinkError(`${err.message} ${LINK_HELP}`) : err;
   });

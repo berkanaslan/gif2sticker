@@ -1,41 +1,46 @@
-import { CORS_PROXY, MAX_SOURCE_BYTES } from './config.js';
+import { MEDIA_SERVICE, MAX_SOURCE_BYTES } from './config.js';
 
 // Twitter's CDN rejects hot-linked requests that carry a foreign Referer, so never send one.
 const OPTIONS = { credentials: 'omit', referrerPolicy: 'no-referrer' };
 
 const host = (url) => new URL(url).host;
-const viaProxy = (url) => CORS_PROXY + encodeURIComponent(url);
+const isText = (response) => (response.headers.get('Content-Type') ?? '').startsWith('text/');
 
-/** The link couldn't be read from the browser (blocked, unreachable or not a media file). */
+/** The link couldn't be loaded (blocked, unreachable, or no GIF/video found). */
 export class LinkError extends Error {}
 
-async function get(url) {
+/** Fetches straight from the browser; null if the site blocks that or answers with a web page. */
+async function fetchDirect(url) {
+  try {
+    const response = await fetch(url, OPTIONS);
+    return response.ok && !isText(response) ? response : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Asks the site's link service, which can read blocked media and find the GIF a page previews. */
+async function fetchViaService(url) {
   let response;
   try {
-    response = await fetch(url, OPTIONS);
+    response = await fetch(MEDIA_SERVICE + encodeURIComponent(url));
   } catch {
-    throw new LinkError(`${host(url)} doesn’t let other websites load its files.`);
+    throw new LinkError('Couldn’t reach the link service. Check your connection.');
   }
-  if (!response.ok) throw new LinkError(`${host(url)} refused the request (${response.status}).`);
-  return response;
+  if (response.ok) return response;
+  const message = response.headers.get('Content-Type')?.startsWith('text/plain') ? await response.text() : '';
+  throw new LinkError(message || `Couldn’t load that link (${response.status}).`);
 }
 
-/** Fetches directly; with `proxy`, retries through the optional CORS proxy when the browser is blocked. */
-async function request(url, { proxy = false } = {}) {
-  try {
-    return await get(url);
-  } catch (err) {
-    if (!proxy) throw err;
-    if (!CORS_PROXY) throw new LinkError(`${err.message} Set up the CORS proxy (see README).`);
-    return get(viaProxy(url));
-  }
+export async function fetchJson(url) {
+  const response = await fetch(url, OPTIONS).catch(() => null);
+  if (!response?.ok) throw new LinkError(`Couldn’t reach ${host(url)}.`);
+  return response.json();
 }
 
-export const fetchJson = async (url, options) => (await request(url, options)).json();
-
-export async function fetchBlob(url, options) {
-  const blob = await (await request(url, options)).blob();
-  if (blob.type.startsWith('text/')) throw new LinkError('That link is a web page, not a GIF or video.');
+export async function fetchBlob(url) {
+  const response = (await fetchDirect(url)) ?? (await fetchViaService(url));
+  const blob = await response.blob();
   if (blob.size > MAX_SOURCE_BYTES) throw new Error('File is too large (max 50 MB).');
   return blob;
 }

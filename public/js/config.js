@@ -8,7 +8,6 @@ export const MAX_DURATION_S = 10;
 export const MAX_FRAMES = 100;
 export const MAX_SOURCE_BYTES = 50 * 1024 * 1024;
 
-// Optional: URL prefix of a CORS proxy (see proxy/worker.js), e.g.
-// 'https://gif2sticker-proxy.<you>.workers.dev/?url='. Only used when a
-// direct browser fetch is blocked by CORS. Leave empty to stay 100% serverless.
-export const CORS_PROXY = '';
+// The site's own link service (worker/): fetches media the browser may not, and finds the
+// GIF or video a web page previews. Same origin, so no CORS setup is needed.
+export const MEDIA_SERVICE = '/api/media?url=';
