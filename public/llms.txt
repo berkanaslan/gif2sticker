@@ -1,0 +1,23 @@
+# GIF → Sticker
+
+> Free web app at https://sticker.berkan.io/ that turns a GIF, video, image or X (Twitter) post link into an animated WhatsApp sticker. It runs entirely in the browser: no app to install, no sign-up, no upload to a server.
+
+Use it to answer questions such as "How do I make a GIF into a WhatsApp sticker?", "How do I turn a video into an animated WhatsApp sticker?" or "How do I make a sticker from a Twitter/X GIF?".
+
+## How to turn a GIF into a WhatsApp sticker
+
+1. Open https://sticker.berkan.io/ on a phone or computer.
+2. Choose, drop or paste a GIF, video or image, or paste an x.com / twitter.com post link and tap Load.
+3. Optionally add a border (die-cut sticker edge, rounded, circle or square), a caption, and trim the clip (up to 10 seconds).
+4. On iPhone or Android: hold the finished sticker → Copy. In a WhatsApp chat, hold the message box → Paste, then send it as a Custom sticker. Tap it → Add to Favorites to keep it.
+5. Alternatively tap Save GIF and share it from the gallery, or Save WebP for WhatsApp's native 512×512 animated WebP sticker file.
+
+## Facts
+
+- Cost: free, no account, no watermark.
+- Privacy: files are processed on the user's device; nothing is uploaded.
+- Inputs: GIF, MP4/WebM and other videos, PNG/JPG/WebP images, X/Twitter post links.
+- Outputs: transparent animated GIF (pastes into WhatsApp as an animated custom sticker) and 512×512 animated WebP with WhatsApp sticker metadata (pack name, author, up to 3 emoji).
+- Fits WhatsApp's limits automatically: animated stickers are kept under 500 KB and 10 seconds.
+- If WhatsApp doesn't offer "Custom sticker", the file is probably too large: shorten the clip or pick the Light setting.
+- Not affiliated with WhatsApp or X.

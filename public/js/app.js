@@ -9,6 +9,7 @@ import { PreviewPlayer } from './preview.js';
 const $ = (selector) => document.querySelector(selector);
 const ui = {
   source: $('#source'),
+  guide: $('#guide'),
   editor: $('#editor'),
   actions: $('#actions'),
   restart: $('#restart'),
@@ -243,6 +244,7 @@ async function refreshFrames() {
 
 function showEditor(visible) {
   ui.source.hidden = visible;
+  ui.guide.hidden = visible;
   ui.editor.hidden = !visible;
   ui.actions.hidden = !visible;
   ui.restart.hidden = !visible;

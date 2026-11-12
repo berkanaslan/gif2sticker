@@ -71,6 +71,13 @@ button.ghost { background: transparent; color: var(--text); border: 1px solid va
   border: 1px solid var(--line); border-radius: 12px; background: transparent;
 }
 
+/* ---------- guide (plain text for people, search engines and AI assistants) ---------- */
+.guide { margin: 24px 0 0; color: var(--muted); font-size: 14px; }
+.guide h2 { color: var(--text); font-size: 16px; margin: 20px 0 8px; }
+.guide h3 { color: var(--text); font-size: 14px; margin: 12px 0 2px; }
+.guide p, .guide ol { margin: 0; }
+.guide ol { padding-left: 20px; }
+
 /* ---------- preview ---------- */
 .stage {
   /* Sticky so edits further down the page stay visible on phones. */
