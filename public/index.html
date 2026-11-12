@@ -3,8 +3,71 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>GIF to Sticker</title>
-  <meta name="description" content="Turn any GIF, video or X (Twitter) post into a WhatsApp sticker, right in your browser.">
+  <title>GIF to WhatsApp Sticker Maker: Free, Online, No App</title>
+  <meta name="description" content="Turn any GIF, video, image or X (Twitter) post into an animated WhatsApp sticker in your browser. Free, no app, no sign-up, nothing uploaded.">
+  <link rel="canonical" href="https://sticker.berkan.io/">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://sticker.berkan.io/">
+  <meta property="og:site_name" content="GIF → Sticker">
+  <meta property="og:title" content="GIF to WhatsApp Sticker Maker">
+  <meta property="og:description" content="Turn any GIF, video or X (Twitter) post into an animated WhatsApp sticker. Free, in your browser, nothing uploaded.">
+  <meta property="og:image" content="https://sticker.berkan.io/og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebApplication",
+        "name": "GIF → Sticker",
+        "alternateName": "GIF to WhatsApp Sticker Maker",
+        "url": "https://sticker.berkan.io/",
+        "description": "Free browser tool that turns a GIF, video, image or X (Twitter) post into an animated WhatsApp sticker. No app, no sign-up; files never leave the device.",
+        "applicationCategory": "MultimediaApplication",
+        "operatingSystem": "Any (web browser)",
+        "browserRequirements": "Requires JavaScript and WebAssembly",
+        "isAccessibleForFree": true,
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+        "featureList": [
+          "GIF, video, image and X/Twitter post link to WhatsApp sticker",
+          "Transparent animated GIF that pastes into WhatsApp as a custom sticker",
+          "512×512 animated WebP with sticker pack name, author and emoji tags",
+          "Die-cut, rounded, circle and square borders",
+          "Captions with emoji",
+          "Automatically kept under WhatsApp's 500 KB and 10 second limits"
+        ],
+        "author": { "@type": "Person", "name": "Berkan Aslan", "url": "https://github.com/berkanaslan" }
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "How do I make a GIF into a WhatsApp sticker?",
+            "acceptedAnswer": { "@type": "Answer", "text": "Open sticker.berkan.io, choose or paste the GIF, then hold the finished sticker and tap Copy. In a WhatsApp chat, hold the message box, tap Paste and send it as a Custom sticker. Tap it and choose Add to Favorites to keep it." }
+          },
+          {
+            "@type": "Question",
+            "name": "Can I make a WhatsApp sticker from a video or an X (Twitter) post?",
+            "acceptedAnswer": { "@type": "Answer", "text": "Yes. Pick a video file, or paste an x.com or twitter.com post link and tap Load. Trim the clip to 10 seconds or less and the app turns it into an animated sticker." }
+          },
+          {
+            "@type": "Question",
+            "name": "Is it free, and are my files uploaded?",
+            "acceptedAnswer": { "@type": "Answer", "text": "It is free with no sign-up or watermark. Everything is processed in your browser, so your files never leave your device." }
+          },
+          {
+            "@type": "Question",
+            "name": "Why doesn't WhatsApp offer Custom sticker when I paste?",
+            "acceptedAnswer": { "@type": "Answer", "text": "The file is probably too large. Animated WhatsApp stickers must be under 500 KB; shorten the clip or choose the Light setting and try again." }
+          }
+        ]
+      }
+    ]
+  }
+  </script>
   <meta name="referrer" content="no-referrer">
   <meta name="theme-color" content="#0b141a">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -33,6 +96,27 @@
         <button type="button" id="paste" class="ghost">Paste</button>
         <button type="submit">Load</button>
       </form>
+    </section>
+
+    <section id="guide" class="guide">
+      <h2>How to turn a GIF into a WhatsApp sticker</h2>
+      <ol>
+        <li>Choose, drop or paste a GIF, video or image above, or paste an X (Twitter) post link.</li>
+        <li>Add a border or caption and trim the clip if you like.</li>
+        <li>Hold the finished sticker → <b>Copy</b>.</li>
+        <li>In a WhatsApp chat, hold the message box → <b>Paste</b> and send it as a <b>Custom sticker</b>.</li>
+        <li>Tap the sticker → <b>Add to Favorites</b> to keep it.</li>
+      </ol>
+
+      <h2>FAQ</h2>
+      <h3>Can I make a WhatsApp sticker from a video or an X (Twitter) post?</h3>
+      <p>Yes. Pick a video file, or paste an x.com or twitter.com post link and tap Load. Trim the clip to 10 seconds or less and the app turns it into an animated sticker.</p>
+      <h3>Is it free, and are my files uploaded?</h3>
+      <p>It is free with no sign-up or watermark. Everything is processed in your browser, so your files never leave your device.</p>
+      <h3>Why doesn't WhatsApp offer Custom sticker when I paste?</h3>
+      <p>The file is probably too large. Animated WhatsApp stickers must be under 500 KB; shorten the clip or choose the Light setting and try again.</p>
+      <h3>What about WhatsApp Web or Desktop?</h3>
+      <p>Tap <b>Save WebP</b> to get WhatsApp's native 512×512 animated sticker file, with pack name, author and emoji tags, and drag it into a chat.</p>
     </section>
 
     <section id="editor" hidden>
