@@ -1,7 +1,8 @@
 import { MAX_DURATION_S, STICKER_SIZE } from './config.js';
 import { createSource } from './sources.js';
 import { parseTweetId, resolveTweetMedia } from './twitter.js';
-import { fetchBlob } from './net.js';
+import { readTransfer } from './transfer.js';
+import { fetchBlob, LinkError } from './net.js';
 import { encodeSticker } from './encoder.js';
 import { withStickerMetadata } from './webp-meta.js';
 import { PreviewPlayer } from './preview.js';
@@ -269,13 +270,33 @@ async function load(blobPromise, label = 'Loading…') {
   }
 }
 
+const LINK_HELP = 'Drag the GIF onto this page instead, or save it and choose the file.';
+
+/** X/Twitter posts are resolved to their media; any other link is a file or a page with a GIF/video. */
 async function blobFromLink(text) {
   const url = text.match(/https?:\/\/\S+/)?.[0] ?? text.trim();
   const tweetId = parseTweetId(url);
-  return fetchBlob(tweetId ? await resolveTweetMedia(tweetId) : url);
+  if (tweetId) return fetchBlob(await resolveTweetMedia(tweetId));
+  return fetchBlob(url).catch((err) => {
+    throw err instanceof LinkError ? new LinkError(`${err.message} ${LINK_HELP}`) : err;
+  });
 }
 
 const loadLink = (text) => load(blobFromLink(text), parseTweetId(text) ? 'Fetching the post’s GIF…' : 'Downloading…');
+
+/** Loads a drop or paste, fetching the animated original when the browser only handed over a still. */
+async function loadTransfer(data) {
+  const { file, url } = readTransfer(data);
+  if (!url) return file && load(Promise.resolve(file));
+  if (!file) return loadLink(url);
+  let gotStill = false;
+  const original = fetchBlob(url).catch(() => {
+    gotStill = true;
+    return file;
+  });
+  await load(original, 'Fetching the animated GIF…');
+  if (gotStill) toast('That site only let us take a still image. Save the GIF to your device and choose it instead.');
+}
 
 // ---------- wiring ----------
 
@@ -314,20 +335,16 @@ function setupInputs() {
   });
 
   document.addEventListener('paste', (e) => {
-    if (e.target.closest?.('#style')) return;
-    const file = [...(e.clipboardData?.files ?? [])][0];
-    const text = e.clipboardData?.getData('text');
-    if (file) load(Promise.resolve(file));
-    else if (text && /https?:\/\//.test(text) && e.target !== ui.link.elements.url) loadLink(text);
+    if (e.target.closest?.('#style') || !e.clipboardData) return;
+    // Typing or pasting into the link box is handled by its own form.
+    if (e.target === ui.link.elements.url && !e.clipboardData.files.length) return;
+    loadTransfer(e.clipboardData);
   });
 
   document.addEventListener('dragover', (e) => e.preventDefault());
   document.addEventListener('drop', (e) => {
     e.preventDefault();
-    const file = e.dataTransfer?.files?.[0];
-    const text = e.dataTransfer?.getData('text/uri-list') || e.dataTransfer?.getData('text');
-    if (file) load(Promise.resolve(file));
-    else if (text) loadLink(text);
+    if (e.dataTransfer) loadTransfer(e.dataTransfer);
   });
 
   ui.restart.addEventListener('click', () => {
