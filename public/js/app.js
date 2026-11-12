@@ -142,7 +142,7 @@ function renderStatus() {
   ui.saveGif.textContent = job && !gif ? `Making…${percent}` : 'Save GIF';
 
   if (job) {
-    const label = job.attempt > 0 ? 'Shrinking to fit' : job === running('webp') ? 'Making WebP' : 'Making sticker';
+    const label = job === running('webp') ? 'Making WebP' : 'Making sticker';
     ui.busyLabel.textContent = `${label}…${percent}`;
     ui.status.textContent = `${label}…`;
   } else if (gif) {
@@ -162,9 +162,9 @@ function ensureOutput(format) {
   if (running(format)) return running(format).promise;
 
   const style = readForm(ui.style);
-  const job = { version, progress: 0, attempt: 0 };
-  job.promise = encodeSticker(state.frames, style, format, ({ progress, attempt }) => {
-    Object.assign(job, { progress, attempt });
+  const job = { version, progress: 0 };
+  job.promise = encodeSticker(state.frames, style, format, ({ progress }) => {
+    job.progress = progress;
     renderStatus();
   })
     .then(({ bytes, frames, fits }) => {

@@ -185,6 +185,11 @@ const FORMATS = {
   },
 };
 
+// How many attempts fitting takes isn't known up front, so each one fills a share of what's left of a
+// single progress bar (the first 0–65%, a retry up to ~88%, …): one bar that never goes backwards.
+const ATTEMPT_SHARE = 0.65;
+const overallProgress = (attempt, progress) => 1 - (1 - ATTEMPT_SHARE) ** attempt * (1 - ATTEMPT_SHARE * progress);
+
 async function encodeToFit({ format, frames, size, limit }, report) {
   const { encode, knobs } = FORMATS[format];
   const steps = frames.length > 1 ? MAX_DECIMATION : 1;
@@ -194,8 +199,7 @@ async function encodeToFit({ format, frames, size, limit }, report) {
     const subset = decimate(frames, step);
     for (const knob of knobs) {
       const current = attempt++;
-      report({ progress: 0, attempt: current });
-      const bytes = await encode(subset, size, knob, (progress) => report({ progress, attempt: current }));
+      const bytes = await encode(subset, size, knob, (progress) => report(overallProgress(current, progress)));
       if (!bytes) throw new Error(`${format.toUpperCase()} encoding failed.`);
       const result = { bytes, frames: subset.length, fits: bytes.length <= limit };
       if (result.fits) return result;
@@ -206,7 +210,7 @@ async function encodeToFit({ format, frames, size, limit }, report) {
 }
 
 self.onmessage = async ({ data: job }) => {
-  const report = ({ progress, attempt }) => self.postMessage({ id: job.id, progress, attempt });
+  const report = (progress) => self.postMessage({ id: job.id, progress });
   try {
     const result = await encodeToFit(job, report);
     self.postMessage({ id: job.id, result }, [result.bytes.buffer]);
