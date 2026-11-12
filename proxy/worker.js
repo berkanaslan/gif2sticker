@@ -1,18 +1,9 @@
-// Cloudflare Worker (free tier) used when the browser can't fetch X/Twitter or Tenor media itself:
-// video.twimg.com may answer cross-site browser requests with 403, and tenor.com pages
-// don't allow cross-site requests at all. Server-side requests work for both.
+// Cloudflare Worker (free tier) used when the browser can't fetch X/Twitter media itself:
+// video.twimg.com may answer cross-site browser requests with 403, but not server ones.
 // Deploy: `cd proxy && npx wrangler deploy`, then set CORS_PROXY in public/js/config.js to
 // 'https://gif2sticker-proxy.<your-subdomain>.workers.dev/?url='.
 
-const ALLOWED_HOSTS = [
-  'api.fxtwitter.com',
-  'api.vxtwitter.com',
-  'video.twimg.com',
-  'pbs.twimg.com',
-  'tenor.com',
-  'media.tenor.com',
-  'media1.tenor.com',
-];
+const ALLOWED_HOSTS = ['api.fxtwitter.com', 'api.vxtwitter.com', 'video.twimg.com', 'pbs.twimg.com'];
 const CORS = { 'Access-Control-Allow-Origin': '*' };
 
 export default {

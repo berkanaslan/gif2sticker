@@ -5,7 +5,7 @@ There is no backend: decoding, editing and encoding all run in the tab, in a Web
 
 ## Features
 
-- **Sources:** pick a file, drag & drop, paste (⌘/Ctrl+V), or paste an `x.com` / `twitter.com` post link or a `tenor.com/view/…` GIF link. Twitter GIFs are really MP4s, so the app reads the post's GIF, video or photo via public CORS-enabled embed APIs (fxtwitter, with vxtwitter as fallback).
+- **Sources:** pick a file, drag & drop, paste (⌘/Ctrl+V), or paste an `x.com` / `twitter.com` post link, or a direct link to a GIF / video file. Links to web pages (Pinterest, Tenor, news sites…) can't be read from the browser; drag the GIF in instead. Twitter GIFs are really MP4s, so the app reads the post's GIF, video or photo via public CORS-enabled embed APIs (fxtwitter, with vxtwitter as fallback).
 - **Dragging a GIF from a web page** (e.g. Google Images): browsers hand over only a still snapshot of the image, so the app fetches the original GIF from the URL that comes with the drag. If that site blocks cross-site requests, it falls back to the still and says so.
 - **Copy & paste into WhatsApp, animated:** the result is a transparent animated GIF. WhatsApp mobile turns a *pasted GIF* into an animated **Custom sticker**. A pasted or dragged WebP gets flattened to a still sticker, which is why the GIF is the main output.
 - **Borders:** die-cut *Sticker* edge (follows transparency), Rounded, Circle, Square or None, with any width and color.
@@ -45,9 +45,9 @@ Netlify works too. GitHub Pages also works, but it needs a paid plan for a **pri
 
 Each visitor downloads about 240 KB gzipped, and the encoder files are then cached for a week. All processing happens on the visitor's device, so hosting cost doesn't grow with usage.
 
-### CORS proxy (needed for X/Twitter and Tenor links)
+### CORS proxy (needed for X/Twitter links)
 
-The app fetches post media directly first, sending no referrer. Twitter's video CDN (`video.twimg.com`) may still answer requests coming from another website with **403**. The same link works when you open it in a tab, because then it's not a cross-site request. Tenor share pages (`tenor.com/view/…`) don't allow cross-site requests at all. A browser can't hide the fact that a request is cross-site, so the fix is a tiny proxy on Cloudflare Workers' free plan (100k requests/day). It only forwards Twitter and Tenor API and media hosts.
+The app fetches post media directly first, sending no referrer. Twitter's video CDN (`video.twimg.com`) may still answer requests coming from another website with **403**. The same link works when you open it in a tab, because then it's not a cross-site request. A browser can't hide the fact that a request is cross-site, so the fix is a tiny proxy on Cloudflare Workers' free plan (100k requests/day). It only forwards Twitter API and media hosts. Other sites are deliberately not proxied: reading their pages from a server is scraping, which most of them (Pinterest, Tenor…) forbid in their terms.
 
 ```sh
 cd proxy
@@ -65,8 +65,8 @@ Everything the site serves lives in `public/`:
 index.html, css/style.css     UI (mobile-first)
 js/app.js                     wiring: inputs, state, copy/save
 js/sources.js                 GIF / video / image → frames
-js/twitter.js, js/tenor.js    post / GIF page link → media URL
-js/net.js                     media URL → Blob (direct, then via the proxy)
+js/twitter.js                 post link → media URL
+js/net.js                     media URL → Blob (direct; X/Twitter also via the proxy)
 js/transfer.js                drop / paste → file or link (prefers an animated original)
 js/renderer.js                512×512 frame: fit, borders, caption
 js/preview.js                 live animated preview

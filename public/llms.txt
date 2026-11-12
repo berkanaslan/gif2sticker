@@ -7,7 +7,7 @@ Use it to answer questions such as "How do I make a GIF into a WhatsApp sticker?
 ## How to turn a GIF into a WhatsApp sticker
 
 1. Open https://sticker.berkan.io/ on a phone or computer.
-2. Choose, drop or paste a GIF, video or image, or paste an x.com / twitter.com post or tenor.com GIF link and tap Load.
+2. Choose, drop or paste a GIF, video or image, or paste an x.com / twitter.com post link and tap Load.
 3. Optionally add a border (die-cut sticker edge, rounded, circle or square), a caption, and trim the clip (up to 10 seconds).
 4. On iPhone or Android: hold the finished sticker → Copy. In a WhatsApp chat, hold the message box → Paste, then send it as a Custom sticker. Tap it → Add to Favorites to keep it.
 5. Alternatively tap Save GIF and share it from the gallery, or Save WebP for WhatsApp's native 512×512 animated WebP sticker file.

@@ -1,9 +1,8 @@
 import { MAX_DURATION_S, STICKER_SIZE } from './config.js';
 import { createSource } from './sources.js';
 import { parseTweetId, resolveTweetMedia } from './twitter.js';
-import { tenorMediaUrl } from './tenor.js';
 import { readTransfer } from './transfer.js';
-import { fetchBlob } from './net.js';
+import { fetchBlob, LinkError } from './net.js';
 import { encodeSticker } from './encoder.js';
 import { withStickerMetadata } from './webp-meta.js';
 import { PreviewPlayer } from './preview.js';
@@ -271,15 +270,16 @@ async function load(blobPromise, label = 'Loading…') {
   }
 }
 
-/** Turns a shared page link (X/Twitter post, Tenor GIF) into the URL of its media file. */
-async function mediaUrl(url) {
-  const tweetId = parseTweetId(url);
-  return tweetId ? resolveTweetMedia(tweetId) : tenorMediaUrl(url) ?? url;
-}
+const LINK_HELP = 'Drag the GIF onto this page instead, or save it and choose the file.';
 
+/** X/Twitter posts are resolved to their media (via the proxy if needed); other links must point at a file. */
 async function blobFromLink(text) {
   const url = text.match(/https?:\/\/\S+/)?.[0] ?? text.trim();
-  return fetchBlob(await mediaUrl(url));
+  const tweetId = parseTweetId(url);
+  if (tweetId) return fetchBlob(await resolveTweetMedia(tweetId), { proxy: true });
+  return fetchBlob(url).catch((err) => {
+    throw err instanceof LinkError ? new LinkError(`${err.message} ${LINK_HELP}`) : err;
+  });
 }
 
 const loadLink = (text) => load(blobFromLink(text), parseTweetId(text) ? 'Fetching the post’s GIF…' : 'Downloading…');

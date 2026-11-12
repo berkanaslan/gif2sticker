@@ -8,11 +8,11 @@ export const parseTweetId = (text) => text.match(TWEET_URL)?.[1] ?? null;
 // Public, CORS-enabled tweet embed APIs. Each returns [{ type, url }].
 const PROVIDERS = [
   async (id) => {
-    const data = await fetchJson(`https://api.fxtwitter.com/status/${id}`);
+    const data = await fetchJson(`https://api.fxtwitter.com/status/${id}`, { proxy: true });
     return (data?.tweet?.media?.all ?? []).map(({ type, url }) => ({ type, url }));
   },
   async (id) => {
-    const data = await fetchJson(`https://api.vxtwitter.com/status/${id}`);
+    const data = await fetchJson(`https://api.vxtwitter.com/status/${id}`, { proxy: true });
     return (data?.media_extended ?? []).map(({ type, url }) => ({ type, url }));
   },
 ];

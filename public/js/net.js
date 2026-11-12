@@ -6,31 +6,36 @@ const OPTIONS = { credentials: 'omit', referrerPolicy: 'no-referrer' };
 const host = (url) => new URL(url).host;
 const viaProxy = (url) => CORS_PROXY + encodeURIComponent(url);
 
+/** The link couldn't be read from the browser (blocked, unreachable or not a media file). */
+export class LinkError extends Error {}
+
 async function get(url) {
   let response;
   try {
     response = await fetch(url, OPTIONS);
   } catch {
-    throw new Error(`Could not reach ${host(url)} from the browser.`);
+    throw new LinkError(`${host(url)} doesn’t let other websites load its files.`);
   }
-  if (!response.ok) throw new Error(`${host(url)} refused the request (${response.status}).`);
+  if (!response.ok) throw new LinkError(`${host(url)} refused the request (${response.status}).`);
   return response;
 }
 
-/** Fetches directly; if the browser is blocked (CORS, 403…) retries through the optional proxy. */
-async function request(url) {
+/** Fetches directly; with `proxy`, retries through the optional CORS proxy when the browser is blocked. */
+async function request(url, { proxy = false } = {}) {
   try {
     return await get(url);
   } catch (err) {
-    if (!CORS_PROXY) throw new Error(`${err.message} Set up the CORS proxy (see README).`);
+    if (!proxy) throw err;
+    if (!CORS_PROXY) throw new LinkError(`${err.message} Set up the CORS proxy (see README).`);
     return get(viaProxy(url));
   }
 }
 
-export const fetchJson = async (url) => (await request(url)).json();
+export const fetchJson = async (url, options) => (await request(url, options)).json();
 
-export async function fetchBlob(url) {
-  const blob = await (await request(url)).blob();
+export async function fetchBlob(url, options) {
+  const blob = await (await request(url, options)).blob();
+  if (blob.type.startsWith('text/')) throw new LinkError('That link is a web page, not a GIF or video.');
   if (blob.size > MAX_SOURCE_BYTES) throw new Error('File is too large (max 50 MB).');
   return blob;
 }
