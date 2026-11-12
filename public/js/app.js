@@ -142,7 +142,7 @@ function renderStatus() {
   ui.saveGif.textContent = job && !gif ? `Making…${percent}` : 'Save GIF';
 
   if (job) {
-    const label = job.attempt > 0 ? 'Shrinking to fit' : job === running('webp') ? 'Making WebP' : 'Making sticker';
+    const label = job === running('webp') ? 'Making WebP' : 'Making sticker';
     ui.busyLabel.textContent = `${label}…${percent}`;
     ui.status.textContent = `${label}…`;
   } else if (gif) {
@@ -162,9 +162,9 @@ function ensureOutput(format) {
   if (running(format)) return running(format).promise;
 
   const style = readForm(ui.style);
-  const job = { version, progress: 0, attempt: 0 };
-  job.promise = encodeSticker(state.frames, style, format, ({ progress, attempt }) => {
-    Object.assign(job, { progress, attempt });
+  const job = { version, progress: 0 };
+  job.promise = encodeSticker(state.frames, style, format, ({ progress }) => {
+    job.progress = progress;
     renderStatus();
   })
     .then(({ bytes, frames, fits }) => {
@@ -274,7 +274,9 @@ const LINK_HELP = 'Drag the GIF onto this page instead, or save it and choose th
 
 /** X/Twitter posts are resolved to their media; any other link is a file or a page with a GIF/video. */
 async function blobFromLink(text) {
-  const url = text.match(/https?:\/\/\S+/)?.[0] ?? text.trim();
+  // Anything that isn't a web link stays on the device: no request is made for it.
+  const url = text.match(/https?:\/\/\S+/)?.[0];
+  if (!url) throw new LinkError('Paste a link that starts with https://');
   const tweetId = parseTweetId(url);
   if (tweetId) return fetchBlob(await resolveTweetMedia(tweetId));
   return fetchBlob(url).catch((err) => {

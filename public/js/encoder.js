@@ -35,7 +35,7 @@ const limitFor = (format, frameCount) =>
 
 /**
  * Encodes frames as 'gif' or 'webp'. Resolves to { bytes: Uint8Array, frames, fits }.
- * `onProgress({ progress, attempt })`: progress (0–1) of the current attempt; attempt > 0 means shrinking.
+ * `onProgress({ progress })`: overall progress (0–1), including any attempts to shrink it to fit.
  */
 export function encodeSticker(frames, style, format, onProgress) {
   const rendered = renderFrames(frames, style);
