@@ -3,6 +3,7 @@
   "name": "gif2sticker",
   "compatibility_date": "2026-11-01",
   "assets": {
-    "directory": "."
+    // Only files in public/ are deployed; everything else in the repo stays private.
+    "directory": "./public"
   }
 }

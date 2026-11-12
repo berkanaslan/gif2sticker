@@ -1,6 +1,6 @@
 // Cloudflare Worker (free tier) used when the browser can't fetch X/Twitter media itself:
 // video.twimg.com may answer cross-site browser requests with 403, but not server ones.
-// Deploy: `cd proxy && npx wrangler deploy`, then set CORS_PROXY in js/config.js to
+// Deploy: `cd proxy && npx wrangler deploy`, then set CORS_PROXY in public/js/config.js to
 // 'https://gif2sticker-proxy.<your-subdomain>.workers.dev/?url='.
 
 const ALLOWED_HOSTS = ['api.fxtwitter.com', 'api.vxtwitter.com', 'video.twimg.com', 'pbs.twimg.com'];
