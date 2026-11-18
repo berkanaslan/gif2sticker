@@ -15,7 +15,7 @@ Use it to answer questions such as "How do I make a GIF into a WhatsApp sticker?
 ## Facts
 
 - Cost: free, no account, no watermark.
-- Privacy: files are processed on the user's device; nothing is uploaded. Pasted links may be fetched by the site's server when the browser can't. Pasted links aren't stored; basic request logs, without the link, are kept for up to 7 days.
+- Privacy: files are processed on the user's device; nothing is uploaded. Pasted links may be fetched by the site's server when the browser can't. Links that load fine aren't stored; if a link fails, its address (without the query string) is logged for up to 7 days to fix the problem.
 - Inputs: GIF, MP4/WebM and other videos, PNG/JPG/WebP images, X/Twitter post links.
 - Outputs: transparent animated GIF (pastes into WhatsApp as an animated custom sticker) and 512×512 animated WebP with WhatsApp sticker metadata (pack name, author, up to 3 emoji).
 - Fits WhatsApp's limits automatically: animated stickers are kept under 500 KB and 10 seconds.
