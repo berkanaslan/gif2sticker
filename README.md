@@ -67,6 +67,8 @@ Abuse protection:
 - **Only media:** public `https` links only (no IP addresses, ports or `localhost`). Only GIF, PNG, JPEG, WebP, MP4, WebM and MOV are returned, up to 50 MB, with `nosniff` and a sandboxing CSP. It is not a general-purpose proxy.
 - If abuse still shows up in the dashboard, add [Cloudflare Turnstile](https://developers.cloudflare.com/turnstile/) (free) so only real browsers can call it.
 
+**Logs:** Workers Logs are on (`observability` in `wrangler.jsonc`) to spot abuse and failures: status, timing and request details for Worker requests only. `redact_query_string` strips `?url=…`, so pasted links are never logged. Retention is up to 7 days, and on the Free plan logging pauses for the day when the daily allowance is used up; it never bills. The privacy text on the site (`index.html`, `llms.txt`) says the same, so update both if this changes.
+
 Note: reading a page's link-preview tags is what chat apps do for link previews, but some sites' terms restrict automated access. Each request is a single fetch, made only because a person pasted that link.
 
 ## Project layout
